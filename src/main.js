@@ -16,6 +16,12 @@ function preload() {
     game.load.image('tile_7', 'assets/img/yellowtile.png'); // 7
 
     game.load.image('btn', 'assets/img/playbutton.png');
+
+    game.load.audio('success', ['assets/sound/success.mp3', 'assets/sound/success.ogg']);
+    game.load.audio('land', ['assets/sound/land.mp3', 'assets/sound/land.ogg']);
+    game.load.audio('rotate', ['assets/sound/rotate.mp3', 'assets/sound/rotate.ogg']);
+    game.load.audio('gameover', ['assets/sound/gameover.mp3', 'assets/sound/gameover.ogg']);
+    game.load.audio('music', ['assets/sound/music.wav', 'assets/sound/music.mp3', 'assets/sound/music.ogg']);
 }
 // position of the tetris grid
 var ox = 300;
@@ -128,6 +134,12 @@ var next_fall = 0;
 var next_action = 0;
 
 function create() {
+    music = game.add.audio('music');
+    snd_rotate = game.add.audio('rotate');
+    snd_land = game.add.audio('land');
+    snd_success = game.add.audio('success');
+    snd_gameover = game.add.audio('gameover');
+    
     game.stage.backgroundColor = '#000';
     for(var x = 0; x < 12; ++x)
 	for(var y = 0; y < 21; ++y)
@@ -143,6 +155,7 @@ function create() {
 }
 
 function actionOnClick () {
+    music.play('', 0, 1, true);
     state = game_state.TET_TO_SPAWN;
     button.visible = false;
 }
@@ -173,8 +186,9 @@ function update() {
 	    next_action = game.time.now + 200;
 	    need_drawing = true;
 	}
-	if(landing(map, tet_only_map))
+	if(landing(map, tet_only_map)) {
 	    state = game_state.TET_TO_SPAWN;
+	}
 	else
 	    state = game_state.TET_TO_FALL;
 	if(game.time.now > next_fall) {
@@ -192,6 +206,7 @@ function update() {
 	    state = game_state.TET_TO_SPAWN;
 	if(need_drawing == true) {
 	    if(new_spawn) {
+		snd_land.play();
 		check_full_lines(map);
 		tet_spawn();
 	    }
@@ -220,6 +235,7 @@ function check_full_lines(map) {
 	    }
 	}
 	if(!hole) {
+	    snd_success.play();
 	    collapse(map, y);
 	    score+=1;
 	}
@@ -250,6 +266,8 @@ function tet_spawn() {
 }
 
 function game_over() {
+    music.pause();
+    snd_gameover.play();
     state = game_state.MENU;
     score = 0;
     button.visible = true;
@@ -265,6 +283,7 @@ function clean_board() {
 }
 
 function tet_rotate() {
+    snd_rotate.play();
     undraw_tet(tet_ox, tet_oy, tet_only_map, tet_spawned, tet_orientation);
     undraw_tet(tet_ox, tet_oy, map, tet_spawned, tet_orientation);
     tet_orientation_rotate();
