@@ -21,7 +21,7 @@ function preload() {
     game.load.audio('land', ['assets/sound/land.mp3', 'assets/sound/land.ogg']);
     game.load.audio('rotate', ['assets/sound/rotate.mp3', 'assets/sound/rotate.ogg']);
     game.load.audio('gameover', ['assets/sound/gameover.mp3', 'assets/sound/gameover.ogg']);
-    game.load.audio('music', ['assets/sound/music.wav', 'assets/sound/music.mp3', 'assets/sound/music.ogg']);
+    game.load.audio('music', ['assets/sound/katyusha-8bit.mp3', 'assets/sound/katyusha-8bit.ogg']);
 }
 // position of the tetris grid
 var ox = 300;
@@ -134,11 +134,11 @@ var next_fall = 0;
 var next_action = 0;
 
 function create() {
-    music = game.add.audio('music');
+    music = game.add.audio('music', 1, true, true);
     snd_rotate = game.add.audio('rotate');
     snd_land = game.add.audio('land');
     snd_success = game.add.audio('success');
-    snd_gameover = game.add.audio('gameover');
+    snd_gameover = game.add.audio('gameover', 0.5, false, true);
     
     game.stage.backgroundColor = '#000';
     for(var x = 0; x < 12; ++x)
@@ -155,7 +155,7 @@ function create() {
 }
 
 function actionOnClick () {
-    music.play('', 0, 1, true);
+    music.play();
     state = game_state.TET_TO_SPAWN;
     button.visible = false;
 }
