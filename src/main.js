@@ -156,6 +156,7 @@ function create() {
 
 function actionOnClick () {
     music.play();
+    score = 0;
     state = game_state.TET_TO_SPAWN;
     button.visible = false;
 }
@@ -269,7 +270,6 @@ function game_over() {
     music.pause();
     snd_gameover.play();
     state = game_state.MENU;
-    score = 0;
     button.visible = true;
     clean_board();
 }
