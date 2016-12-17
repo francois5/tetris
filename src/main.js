@@ -167,7 +167,7 @@ function create() {
 
     var style2 = { font: "bold 25px Arial", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle" };
     game.add.text(700, 220, "Controls", style);
-    game.add.text(700, 240, "--------", style);
+    game.add.text(700, 240, "------------", style);
     game.add.text(700, 265, "Space: rotate", style2);
     game.add.text(700, 290, "Down : go down faster", style2);
     game.add.text(700, 315, "Left : go left", style2);
