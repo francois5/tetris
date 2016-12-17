@@ -155,12 +155,29 @@ var next_fall = 0;
 // time when we can accept another user action
 var next_action = 0;
 
+var game_start_time;
+var music_speed = 1;
+var first_spawn = true;
+
 function create() {
-    music = game.add.audio('music', 1, true, true);
+    var style = { font: "bold 30px Arial", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle" };
+    levelText = game.add.text(180, 0, "Level "+music_speed, style);
+    scoreText = game.add.text(10, 0, "Score: "+score, style);
+    max_scoreText = game.add.text(10, 40, "Max score: "+max_score, style);
+
+    var style2 = { font: "bold 25px Arial", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle" };
+    game.add.text(700, 220, "Controls", style);
+    game.add.text(700, 240, "--------", style);
+    game.add.text(700, 265, "Space: rotate", style2);
+    game.add.text(700, 290, "Down : go down faster", style2);
+    game.add.text(700, 315, "Left : go left", style2);
+    game.add.text(700, 345, "Right: go right ", style2);
+    
+    music = new WarpedSound(game, 'music', 1, true);
     snd_rotate = game.add.audio('rotate');
     snd_land = game.add.audio('land');
     snd_success = game.add.audio('success');
-    snd_gameover = game.add.audio('gameover', 0.5, false, true);
+    snd_gameover = game.add.audio('gameover', 0.3, false, true);
     
     game.stage.backgroundColor = '#000';
     init_images(images);
@@ -168,47 +185,57 @@ function create() {
     
     draw_map(ox, oy, map, images);
     draw_map(next_tet_ox, next_tet_oy, next_tet_map, next_tet_images);
-    max_score = localStorage.getItem('tetris_max_score');
+    update_max_score(localStorage.getItem('tetris_max_score'));
 
     downKey = game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
     leftKey = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
     rightKey = game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
     spaceKey = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
 
-    button = game.add.button(-10, 20, 'btn', actionOnClick, this, 2, 1, 0);
+    button = game.add.button(-10, 80, 'btn', actionOnClick, this, 2, 1, 0);
 }
 
 function actionOnClick () {
+    game_start_time = game.time.now;
     music.play();
-    score = 0;
+    update_score(0);
+    update_music_speed(1);
+    first_spawn = true;
     state = game_state.TET_TO_SPAWN;
     button.visible = false;
 }
 
 function update() {
     if(state != game_state.MENU) {
+	var music_duration = 113*1000; //1min 53sec
+	if((game.time.now - game_start_time) > music_speed * music_duration) {
+	    if(music_speed < 7) {
+		update_music_speed(music_speed+1);
+		music.tweenSpeed(music_speed-((music_speed-1)*0.9), 0);
+	    }
+	}
 	var need_drawing = false;
 	var new_spawn = false;
 	if(downKey.isDown && game.time.now > next_action) {
 	    if(state == game_state.TET_TO_FALL) {
 		tet_fall();
-		next_action = game.time.now + 100;
+		next_action = game.time.now + 100-(7*(music_speed-1));
 		need_drawing = true;
 	    }
 	}
 	else if(leftKey.isDown && game.time.now > next_action) {
 	    tet_left();
-	    next_action = game.time.now + 200;
+	    next_action = game.time.now + 200-(14*(music_speed-1));
 	    need_drawing = true;
 	}
 	else if(rightKey.isDown && game.time.now > next_action) {
 	    tet_right();
-	    next_action = game.time.now + 200;
+	    next_action = game.time.now + 200-(14*(music_speed-1));
 	    need_drawing = true;
 	}
 	else if(spaceKey.isDown && game.time.now > next_action) {
 	    tet_rotate();
-	    next_action = game.time.now + 200;
+	    next_action = game.time.now + 200-(14*(music_speed-1));
 	    need_drawing = true;
 	}
 	if(landing(map, tet_only_map))
@@ -223,8 +250,13 @@ function update() {
 	    else if(state == game_state.TET_TO_FALL) {
 		tet_fall();
 		need_drawing = true;
+		if(first_spawn) {
+		    draw_next_tet();
+		    draw_map(next_tet_ox, next_tet_oy, next_tet_map, next_tet_images);
+		    first_spawn = false;
+		}
 	    }
-	    next_fall = game.time.now + 500;
+	    next_fall = game.time.now + 500-(70*(music_speed-1));
 	}
 	if(landing(map, tet_only_map))
 	    state = game_state.TET_TO_SPAWN;
@@ -241,14 +273,19 @@ function update() {
 }
 
 function render() {
-    this.game.debug.text('SCORE: '+score, 10, 14, 'red', 'Segoe UI');
-    this.game.debug.text('MAX SCORE: '+max_score, 10, 28, 'red', 'Segoe UI');
-    this.game.debug.text('Controls', 700, 214, 'red', 'Segoe UI');
-    this.game.debug.text('--------', 700, 222, 'red', 'Segoe UI');
-    this.game.debug.text('Space: rotate', 700, 230, 'red', 'Segoe UI');
-    this.game.debug.text('Down : go down quicker', 700, 242, 'red', 'Segoe UI');
-    this.game.debug.text('Left : go left', 700, 254, 'red', 'Segoe UI');
-    this.game.debug.text('Right: go right', 700, 266, 'red', 'Segoe UI');
+}
+
+function update_music_speed(speed) {
+    music_speed = speed;
+    levelText.text = 'Level ' + music_speed;
+}
+function update_max_score(x) {
+    max_score = x;
+    max_scoreText.text = 'Max score: ' + max_score;
+}
+function update_score(x) {
+    score = x;
+    scoreText.text = 'Score: ' + score;
 }
 
 function check_full_lines(map) {
@@ -263,7 +300,7 @@ function check_full_lines(map) {
 	if(!hole) {
 	    snd_success.play();
 	    collapse(map, y);
-	    score+=1;
+	    update_score(score+1);
 	}
     }
 }
@@ -287,10 +324,14 @@ function tet_spawn() {
 	draw_tet(tet_ox, tet_oy, map, next_tet_to_spawn, next_tet_to_spawn, tet_orientation);
 	tet_spawned = next_tet_to_spawn;
 	next_tet_to_spawn = rand_tet();
-	undraw_tet(0, 2, next_tet_map, tet_spawned, 0);
-	draw_tet(0, 2, next_tet_map, next_tet_to_spawn, next_tet_to_spawn, 0);
+	draw_next_tet();
 	state = game_state.TET_TO_FALL;
     }
+}
+
+function draw_next_tet() {
+    undraw_tet(0, 2, next_tet_map, tet_spawned, 0);
+    draw_tet(0, 2, next_tet_map, next_tet_to_spawn, next_tet_to_spawn, 0);
 }
 
 function game_over() {
@@ -300,7 +341,7 @@ function game_over() {
     button.visible = true;
     clean_board();
     if(score > max_score) {
-	max_score = score;
+	update_max_score(score);
 	localStorage.setItem('tetris_max_score', max_score);
     }
 }
@@ -425,8 +466,8 @@ function tet_xy_move_down_undo() {
 }
 
 function draw_map(ox, oy, map, images) {
-    for(var x = 0; x < map[0].length; ++x)//12; ++x)
-	for(var y = 0; y < map.length; ++y) {//21; ++y) {
+    for(var x = 0; x < map[0].length; ++x)
+	for(var y = 0; y < map.length; ++y) {
 	    images[y][x].destroy();
 	    images[y][x] = game.add.sprite(x*32+ox, y*32+oy, 'tile_'+String(map[y][x]));
 	}
