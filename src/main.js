@@ -28,6 +28,7 @@ var ox = 300;
 var oy = 0;
 
 var score = 0;
+var max_score = 0;
 
 // type of tetriminos (the one that is falling now and the next one)
 var next_tet_to_spawn = rand_tet();
@@ -145,6 +146,7 @@ function create() {
 	for(var y = 0; y < 21; ++y)
 	    images[y][x] = game.add.sprite(0, 0, 'tile_3');
     draw_map(ox, oy, map);
+    max_score = localStorage.getItem('tetris_max_score');
 
     downKey = game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
     leftKey = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
@@ -218,6 +220,7 @@ function update() {
 
 function render() {
     this.game.debug.text('SCORE: '+score, 10, 14, 'red', 'Segoe UI');
+    this.game.debug.text('MAX SCORE: '+max_score, 10, 28, 'red', 'Segoe UI');
     this.game.debug.text('Keys', 700, 14, 'red', 'Segoe UI');
     this.game.debug.text('----', 700, 22, 'red', 'Segoe UI');
     this.game.debug.text('Space: rotate', 700, 30, 'red', 'Segoe UI');
@@ -272,6 +275,10 @@ function game_over() {
     state = game_state.MENU;
     button.visible = true;
     clean_board();
+    if(score > max_score) {
+	max_score = score;
+	localStorage.setItem('tetris_max_score', max_score);
+    }
 }
 
 function clean_board() {
