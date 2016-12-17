@@ -27,6 +27,9 @@ function preload() {
 var ox = 300;
 var oy = 0;
 
+var next_tet_ox = 684;
+var next_tet_oy = 0;
+
 var score = 0;
 var max_score = 0;
 
@@ -121,6 +124,24 @@ var images = [
     new Array(12)
 ];
 
+var next_tet_map = [
+    [8,8,8,8,8],
+    [0,0,0,0,8],
+    [0,0,0,0,8],
+    [0,0,0,0,8],
+    [0,0,0,0,8],
+    [8,8,8,8,8],
+];
+
+var next_tet_images = [
+    new Array(5),
+    new Array(5),
+    new Array(5),
+    new Array(5),
+    new Array(5),
+    new Array(5)
+];
+
 // to handle inputs
 var downKey;
 var leftKey;
@@ -142,10 +163,11 @@ function create() {
     snd_gameover = game.add.audio('gameover', 0.5, false, true);
     
     game.stage.backgroundColor = '#000';
-    for(var x = 0; x < 12; ++x)
-	for(var y = 0; y < 21; ++y)
-	    images[y][x] = game.add.sprite(0, 0, 'tile_3');
-    draw_map(ox, oy, map);
+    init_images(images);
+    init_images(next_tet_images);
+    
+    draw_map(ox, oy, map, images);
+    draw_map(next_tet_ox, next_tet_oy, next_tet_map, next_tet_images);
     max_score = localStorage.getItem('tetris_max_score');
 
     downKey = game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
@@ -189,9 +211,8 @@ function update() {
 	    next_action = game.time.now + 200;
 	    need_drawing = true;
 	}
-	if(landing(map, tet_only_map)) {
+	if(landing(map, tet_only_map))
 	    state = game_state.TET_TO_SPAWN;
-	}
 	else
 	    state = game_state.TET_TO_FALL;
 	if(game.time.now > next_fall) {
@@ -212,8 +233,9 @@ function update() {
 		snd_land.play();
 		check_full_lines(map);
 		tet_spawn();
+		draw_map(next_tet_ox, next_tet_oy, next_tet_map, next_tet_images);
 	    }
-	    draw_map(ox, oy, map);
+	    draw_map(ox, oy, map, images);
 	}
     }
 }
@@ -221,12 +243,12 @@ function update() {
 function render() {
     this.game.debug.text('SCORE: '+score, 10, 14, 'red', 'Segoe UI');
     this.game.debug.text('MAX SCORE: '+max_score, 10, 28, 'red', 'Segoe UI');
-    this.game.debug.text('Keys', 700, 14, 'red', 'Segoe UI');
-    this.game.debug.text('----', 700, 22, 'red', 'Segoe UI');
-    this.game.debug.text('Space: rotate', 700, 30, 'red', 'Segoe UI');
-    this.game.debug.text('Down : go down quicker', 700, 42, 'red', 'Segoe UI');
-    this.game.debug.text('Left : go left', 700, 54, 'red', 'Segoe UI');
-    this.game.debug.text('Right: go right', 700, 66, 'red', 'Segoe UI');
+    this.game.debug.text('Controls', 700, 214, 'red', 'Segoe UI');
+    this.game.debug.text('--------', 700, 222, 'red', 'Segoe UI');
+    this.game.debug.text('Space: rotate', 700, 230, 'red', 'Segoe UI');
+    this.game.debug.text('Down : go down quicker', 700, 242, 'red', 'Segoe UI');
+    this.game.debug.text('Left : go left', 700, 254, 'red', 'Segoe UI');
+    this.game.debug.text('Right: go right', 700, 266, 'red', 'Segoe UI');
 }
 
 function check_full_lines(map) {
@@ -265,6 +287,8 @@ function tet_spawn() {
 	draw_tet(tet_ox, tet_oy, map, next_tet_to_spawn, next_tet_to_spawn, tet_orientation);
 	tet_spawned = next_tet_to_spawn;
 	next_tet_to_spawn = rand_tet();
+	undraw_tet(0, 2, next_tet_map, tet_spawned, 0);
+	draw_tet(0, 2, next_tet_map, next_tet_to_spawn, next_tet_to_spawn, 0);
 	state = game_state.TET_TO_FALL;
     }
 }
@@ -400,33 +424,9 @@ function tet_xy_move_down_undo() {
     tet_oy -= 1;
 }
 
-var images = [
-    new Array(12),
-    new Array(12),
-    new Array(12),
-    new Array(12),
-    new Array(12),
-    new Array(12),
-    new Array(12),
-    new Array(12),
-    new Array(12),
-    new Array(12),
-    new Array(12),
-    new Array(12),
-    new Array(12),
-    new Array(12),
-    new Array(12),
-    new Array(12),
-    new Array(12),
-    new Array(12),
-    new Array(12),
-    new Array(12),
-    new Array(12)
-];
-
-function draw_map(ox, oy, map) {
-    for(var x = 0; x < 12; ++x)
-	for(var y = 0; y < 21; ++y) {
+function draw_map(ox, oy, map, images) {
+    for(var x = 0; x < map[0].length; ++x)//12; ++x)
+	for(var y = 0; y < map.length; ++y) {//21; ++y) {
 	    images[y][x].destroy();
 	    images[y][x] = game.add.sprite(x*32+ox, y*32+oy, 'tile_'+String(map[y][x]));
 	}
@@ -582,4 +582,10 @@ function draw_tet_O(ox, oy, map, texture, orientation) {
     map[oy]   [ox+1] = texture;
     map[oy+1] [ox]   = texture;
     map[oy+1] [ox+1] = texture;
+}
+
+function init_images(images) {
+    for(var x = 0; x < images[0].length; ++x)
+	for(var y = 0; y < images.length; ++y)
+	    images[y][x] = game.add.sprite(0, 0, 'tile_3');
 }
