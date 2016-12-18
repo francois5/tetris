@@ -15,7 +15,7 @@ function preload() {
     game.load.image('tile_6',    'assets/img/redtile.png'); // 6
     game.load.image('tile_7', 'assets/img/yellowtile.png'); // 7
 
-    game.load.image('btn', 'assets/img/playbutton.png');
+    game.load.spritesheet('btn', 'assets/img/button_sprite_sheet.png', 260, 100);
 
     game.load.audio('success', ['assets/sound/success.mp3', 'assets/sound/success.ogg']);
     game.load.audio('land', ['assets/sound/land.mp3', 'assets/sound/land.ogg']);
@@ -192,7 +192,12 @@ function create() {
     rightKey = game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
     spaceKey = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
 
-    button = game.add.button(-10, 80, 'btn', actionOnClick, this, 2, 1, 0);
+    button = game.add.button(20, 90, 'btn', actionOnClick, this, 2, 1, 0);
+    button.events.onInputOver.add(overBtn, this);
+}
+
+function overBtn() {
+    snd_land.play('', 0, 0.3);
 }
 
 function actionOnClick () {
