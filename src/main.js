@@ -22,6 +22,7 @@ function preload() {
     game.load.audio('rotate', ['assets/sound/rotate.mp3', 'assets/sound/rotate.ogg']);
     game.load.audio('gameover', ['assets/sound/gameover.mp3', 'assets/sound/gameover.ogg']);
     game.load.audio('music', ['assets/sound/katyusha-8bit.mp3', 'assets/sound/katyusha-8bit.ogg']);
+    game.load.audio('hover', ['assets/sound/wooden_hover.mp3', 'assets/sound/wooden_hover.ogg']);
 }
 // position of the tetris grid
 var ox = 300;
@@ -178,6 +179,7 @@ function create() {
     snd_land = game.add.audio('land');
     snd_success = game.add.audio('success');
     snd_gameover = game.add.audio('gameover', 0.3, false, true);
+    snd_hover = game.add.audio('hover');
     
     game.stage.backgroundColor = '#000';
     init_images(images);
@@ -197,7 +199,7 @@ function create() {
 }
 
 function overBtn() {
-    snd_land.play('', 0, 0.3);
+    snd_hover.play();
 }
 
 function actionOnClick () {
