@@ -15,6 +15,8 @@ function preload() {
     game.load.image('tile_6',    'assets/img/redtile.png'); // 6
     game.load.image('tile_7', 'assets/img/yellowtile.png'); // 7
 
+    game.load.image('img_music', 'assets/img/music.png');
+    
     game.load.spritesheet('btn', 'assets/img/button_sprite_sheet.png', 260, 100);
 
     game.load.audio('success', ['assets/sound/success.mp3', 'assets/sound/success.ogg']);
@@ -102,26 +104,11 @@ var tet_only_map = [
 
 // images grid
 var images = [
-    new Array(12),
-    new Array(12),
-    new Array(12),
-    new Array(12),
-    new Array(12),
-    new Array(12),
-    new Array(12),
-    new Array(12),
-    new Array(12),
-    new Array(12),
-    new Array(12),
-    new Array(12),
-    new Array(12),
-    new Array(12),
-    new Array(12),
-    new Array(12),
-    new Array(12),
-    new Array(12),
-    new Array(12),
-    new Array(12),
+    new Array(12), new Array(12), new Array(12), new Array(12),
+    new Array(12), new Array(12), new Array(12), new Array(12),
+    new Array(12), new Array(12), new Array(12), new Array(12),
+    new Array(12), new Array(12), new Array(12), new Array(12),
+    new Array(12), new Array(12), new Array(12), new Array(12),
     new Array(12)
 ];
 
@@ -159,6 +146,7 @@ var next_action = 0;
 var game_start_time;
 var music_speed = 1;
 var first_spawn = true;
+var img_music;
 
 function create() {
     var style = { font: "bold 30px Arial", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle" };
@@ -189,6 +177,8 @@ function create() {
     draw_map(next_tet_ox, next_tet_oy, next_tet_map, next_tet_images);
     update_max_score(localStorage.getItem('tetris_max_score'));
 
+    music_btn();
+    
     downKey = game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
     leftKey = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
     rightKey = game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
@@ -196,6 +186,21 @@ function create() {
 
     button = game.add.button(20, 90, 'btn', actionOnClick, this, 2, 1, 0);
     button.events.onInputOver.add(overBtn, this);
+}
+
+function music_btn() {
+    if(img_music != null)
+	img_music.destroy();
+    img_music = game.add.sprite(920, 30, 'img_music');
+    img_music.inputEnabled = true;
+    img_music.events.onInputDown.add(music_on_off, this);
+}
+
+function music_on_off() {
+    if(music.isPlaying)
+	music.stop();
+    else
+	music.play();
 }
 
 function overBtn() {
