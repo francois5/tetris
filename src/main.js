@@ -5,6 +5,8 @@ var game = new Phaser.Game(984, 672, Phaser.AUTO, 'tetris',
 			     render: render });
 
 function preload() {
+    game.stage.disableVisibilityChange = true;
+    
     game.load.image('tile_0',  'assets/img/whitetile.png'); // 0 (void)
     game.load.image('tile_8',   'assets/img/greytile.png'); // 8 (wall)
     game.load.image('tile_1',   'assets/img/bluetile.png'); // 1
@@ -147,6 +149,10 @@ var game_start_time;
 var music_speed = 1;
 var first_spawn = true;
 var img_music;
+var pause_btn;
+var unpause_btn;
+
+var pauseDurationTotal = 0;
 
 function create() {
     var style = { font: "bold 30px Arial", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle" };
@@ -163,9 +169,9 @@ function create() {
     game.add.text(700, 345, "Right: go right ", style2);
     
     music = new WarpedSound(game, 'music', 1, true);
-    snd_rotate = game.add.audio('rotate');
+    snd_rotate = game.add.audio('rotate', 0.5, false, true);
     snd_land = game.add.audio('land');
-    snd_success = game.add.audio('success');
+    snd_success = game.add.audio('success', 0.5, false, true);
     snd_gameover = game.add.audio('gameover', 0.3, false, true);
     snd_hover = game.add.audio('hover');
     
@@ -178,6 +184,8 @@ function create() {
     update_max_score(localStorage.getItem('tetris_max_score'));
 
     music_btn();
+    put_pause_btn();
+    game.input.onDown.add(unpause, self);
     
     downKey = game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
     leftKey = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
@@ -203,6 +211,37 @@ function music_on_off() {
 	music.play();
 }
 
+function put_pause_btn() {
+    if(pause_btn != null)
+	pause_btn.destroy();
+    var style = { font: "bold 30px Arial", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle" };
+    pause_btn = game.add.text(860, 80, "PAUSE", style);
+    pause_btn.inputEnabled = true;
+    pause_btn.events.onInputDown.add(pause, this);
+}
+
+function pause() {
+    pause_btn.destroy();
+    game.paused = true;
+    put_unpause_btn();
+}
+
+function put_unpause_btn() {
+    if(unpause_btn != null)
+	unpause_btn.destroy();
+    var style = { font: "bold 80px Arial", fill: "#a00909", boundsAlignH: "center", boundsAlignV: "middle" };
+    unpause_btn = game.add.text(320, 250, "RESUME", style);
+}
+
+function unpause() {
+    if(game.paused) {
+	unpause_btn.destroy();
+	game.paused = false;
+	pauseDurationTotal += game.time.pauseDuration;
+	put_pause_btn();
+    }
+}
+
 function overBtn() {
     snd_hover.play();
 }
@@ -220,7 +259,7 @@ function actionOnClick () {
 function update() {
     if(state != game_state.MENU) {
 	var music_duration = 113*1000; //1min 53sec
-	if((game.time.now - game_start_time) > music_speed * music_duration) {
+	if((game.time.now - pauseDurationTotal - game_start_time) > music_speed * music_duration) {
 	    if(music_speed < 7) {
 		update_music_speed(music_speed+1);
 		music.tweenSpeed(music_speed-((music_speed-1)*0.9), 0);
@@ -285,6 +324,8 @@ function update() {
 }
 
 function render() {
+    //this.game.debug.text('GAME NOW: '+(game.time.now-pauseDurationTotal), 16, 280, 'red', 'Arial');
+    //this.game.debug.text('START: '+game_start_time, 16, 300, 'red', 'Arial');
 }
 
 function update_music_speed(speed) {
