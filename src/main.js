@@ -17,7 +17,8 @@ function preload() {
     game.load.image('tile_6',    'assets/img/redtile.png'); // 6
     game.load.image('tile_7', 'assets/img/yellowtile.png'); // 7
 
-    game.load.image('img_music', 'assets/img/music.png');
+    game.load.spritesheet('img_music', 'assets/img/music.png', 30, 30);
+    game.load.spritesheet('img_sound', 'assets/img/sound.png', 30, 30);
     
     game.load.spritesheet('btn', 'assets/img/button_sprite_sheet.png', 260, 100);
 
@@ -148,7 +149,7 @@ var next_action = 0;
 var game_start_time;
 var music_speed = 1;
 var first_spawn = true;
-var img_music;
+var img_music, img_sound, soundOn = true;
 var pause_btn;
 var unpause_btn;
 
@@ -184,6 +185,7 @@ function create() {
     update_max_score(localStorage.getItem('tetris_max_score'));
 
     music_btn();
+    sound_btn();
     put_pause_btn();
     game.input.onDown.add(unpause, self);
     
@@ -193,22 +195,48 @@ function create() {
     spaceKey = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
 
     button = game.add.button(20, 90, 'btn', actionOnClick, this, 2, 1, 0);
-    button.events.onInputOver.add(overBtn, this);
+    button.events.onInputOver.add(overSound, this);
 }
 
 function music_btn() {
     if(img_music != null)
 	img_music.destroy();
-    img_music = game.add.sprite(920, 30, 'img_music');
-    img_music.inputEnabled = true;
-    img_music.events.onInputDown.add(music_on_off, this);
+    img_music = game.add.button(920, 30, 'img_music', music_on_off, this, 2, 1, 2);
+    img_music.events.onInputOver.add(overSound, this);
+}
+
+function sound_btn() {
+    if(img_sound != null)
+	img_sound.destroy();
+    img_sound = game.add.button(880, 30, 'img_sound', sound_on_off, this, 1, 2, 1);
+    img_sound.events.onInputOver.add(overSound, this);
+}
+
+function overSound() {
+    if(soundOn)
+	snd_hover.play();
 }
 
 function music_on_off() {
-    if(music.isPlaying)
+    if(music.isPlaying) {
 	music.stop();
-    else
+	img_music.setFrames(2, 1, 2);
+    }
+    else {
 	music.play();
+	img_music.setFrames(1, 2, 1);
+    }
+}
+
+function sound_on_off() {
+    if(soundOn) {
+	soundOn = false;
+	img_sound.setFrames(2, 1, 2);
+    }
+    else {
+	soundOn = true;
+	img_sound.setFrames(1, 2, 1);
+    }
 }
 
 function put_pause_btn() {
@@ -217,6 +245,8 @@ function put_pause_btn() {
     var style = { font: "bold 30px Arial", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle" };
     pause_btn = game.add.text(860, 80, "PAUSE", style);
     pause_btn.inputEnabled = true;
+    pause_btn.events.onInputOver.add(over, this);
+    pause_btn.events.onInputOut.add(out, this);
     pause_btn.events.onInputDown.add(pause, this);
 }
 
@@ -224,6 +254,15 @@ function pause() {
     pause_btn.destroy();
     game.paused = true;
     put_unpause_btn();
+}
+
+function over(item) {
+    overSound();
+    item.fill = "#a00909";
+}
+
+function out(item) {
+    item.fill = "#fff";
 }
 
 function put_unpause_btn() {
@@ -242,13 +281,10 @@ function unpause() {
     }
 }
 
-function overBtn() {
-    snd_hover.play();
-}
-
 function actionOnClick () {
     game_start_time = game.time.now;
-    music.play();
+    music.stop();
+    music_on_off();
     update_score(0);
     update_music_speed(1);
     first_spawn = true;
@@ -313,7 +349,8 @@ function update() {
 	    state = game_state.TET_TO_SPAWN;
 	if(need_drawing == true) {
 	    if(new_spawn) {
-		snd_land.play();
+		if(soundOn)
+		    snd_land.play();
 		check_full_lines(map);
 		tet_spawn();
 		draw_map(next_tet_ox, next_tet_oy, next_tet_map, next_tet_images);
@@ -351,7 +388,8 @@ function check_full_lines(map) {
 	    }
 	}
 	if(!hole) {
-	    snd_success.play();
+	    if(soundOn)
+		snd_success.play();
 	    collapse(map, y);
 	    update_score(score+1);
 	}
@@ -388,8 +426,10 @@ function draw_next_tet() {
 }
 
 function game_over() {
-    music.pause();
-    snd_gameover.play();
+    music.play();
+    music_on_off();
+    if(soundOn)
+	snd_gameover.play();
     state = game_state.MENU;
     button.visible = true;
     clean_board();
@@ -408,7 +448,8 @@ function clean_board() {
 }
 
 function tet_rotate() {
-    snd_rotate.play();
+    if(soundOn)
+	snd_rotate.play();
     undraw_tet(tet_ox, tet_oy, tet_only_map, tet_spawned, tet_orientation);
     undraw_tet(tet_ox, tet_oy, map, tet_spawned, tet_orientation);
     tet_orientation_rotate();
